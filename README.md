@@ -23,13 +23,13 @@ Only keep events where all the following conditions are met:
     "value": "yourcompany.com"
   },
   {
-    "property": "host",
+    "property": "$host",
     "type": "string",
     "operator": "is_not",
     "value": "localhost:8000"
   },
   {
-    "property": "browser_version",
+    "property": "$browser_version",
     "type": "number",
     "operator": "gt",
     "value": 100

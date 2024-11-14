@@ -14,7 +14,7 @@ export interface PluginMeta
       keepUndefinedProperties?: "Yes" | "No";
     };
     global: {
-      filters: Filter[];
+      filters: Filter[][];
       eventsToDrop: string[];
       keepUndefinedProperties?: boolean;
     };
@@ -53,19 +53,21 @@ export function setupPlugin({ global, config, attachments }: PluginMeta) {
   if (attachments.filters) {
     try {
       // Parse the filters from the attachment
-      const filters = JSON.parse(attachments.filters.contents) as Filter[];
-      if (!filters) throw new Error("No filters found");
+      const filterGroups = JSON.parse(attachments.filters.contents) as Filter[][];
+      if (!filterGroups) throw new Error("No filters found");
 
       // Check if the filters are valid
-      for (const filter of filters) {
-        if (!operations[filter.type][filter.operator]) {
-          throw new Error(
-            `Invalid operator "${filter.operator}" for type "${filter.type}" in filter for "${filter.property}"`
-          );
+      for (const filters of filterGroups) {
+        for (const filter of filters) {
+          if (!operations[filter.type][filter.operator]) {
+            throw new Error(
+              `Invalid operator "${filter.operator}" for type "${filter.type}" in filter for "${filter.property}"`
+            );
+          }
         }
       }
       // Save the filters to the global object
-      global.filters = filters;
+      global.filters = filterGroups;
     } catch (err) {
       throw new Error("Could not parse filters attachment: " + err.message);
     }
@@ -90,16 +92,19 @@ export function processEvent(
     return undefined;
   }
 
-  // Check if the event satisfies all the filters
-  const keepEvent = filters.every((filter) => {
-    const value = event.properties[filter.property];
-    if (value === undefined) return keepUndefinedProperties;
+  // Check if the event satisfies any of the filter groups (OR logic between groups)
+  const keepEvent = filters.some((filterGroup) => 
+    // Check if all filters in the group are satisfied (AND logic within group)
+    filterGroup.every((filter) => {
+      const value = event.properties[filter.property];
+      if (value === undefined) return keepUndefinedProperties;
 
-    const operation = operations[filter.type][filter.operator];
-    if (!operation) throw new Error(`Invalid operator ${filter.operator}`);
+      const operation = operations[filter.type][filter.operator];
+      if (!operation) throw new Error(`Invalid operator ${filter.operator}`);
 
-    return operation(value, filter.value);
-  });
+      return operation(value, filter.value);
+    })
+  );
 
   // If should keep the event, return it, else return undefined
   return keepEvent ? event : undefined;

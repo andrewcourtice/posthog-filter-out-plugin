@@ -2,25 +2,27 @@ import { expect, test, describe } from "@jest/globals";
 import { createEvent } from "@posthog/plugin-scaffold/test/utils";
 import { Filter, PluginMeta, processEvent, setupPlugin } from "./main";
 
-const filters: Filter[] = [
-  {
-    property: "$host",
-    type: "string",
-    operator: "not_contains",
-    value: "localhost",
-  },
-  {
-    property: "foo",
-    type: "number",
-    operator: "gt",
-    value: 10,
-  },
-  {
-    property: "bar",
-    type: "boolean",
-    operator: "is",
-    value: true,
-  },
+const filters: Filter[][] = [
+  [
+    {
+      property: "$host",
+      type: "string",
+      operator: "not_contains",
+      value: "localhost",
+    },
+    {
+      property: "foo",
+      type: "number",
+      operator: "gt",
+      value: 10,
+    },
+    {
+      property: "bar",
+      type: "boolean",
+      operator: "is",
+      value: true,
+    },
+  ],
 ];
 
 const meta = {
@@ -191,4 +193,60 @@ describe("empty filters", () => {
     expect(global.eventsToDrop).toEqual(["foo", "bar"]);
     expect(global.keepUndefinedProperties).toEqual(true);
   });
+});
+
+
+const filters_or: Filter[][] = [
+  [
+    {
+      property: "$host",
+      type: "string",
+      operator: "not_contains",
+      value: "localhost",
+    },
+    {
+      property: "foo",
+      type: "number",
+      operator: "gt",
+      value: 10,
+    },
+  ],
+  [
+    {
+      property: "bar",
+      type: "boolean",
+      operator: "is",
+      value: true,
+    },
+  ],
+];
+
+const meta_or = {
+  global: { filters: filters_or, eventsToDrop: ["to_drop_event"] },
+} as PluginMeta;
+
+test("Event satisfies at least one filter group and passes", () => {
+  const event = createEvent({
+    event: "test event",
+    properties: {
+      $host: "example.com",
+      foo: 5,
+      bar: true,
+    },
+  });
+  const processedEvent = processEvent(event, meta_or);
+  expect(processedEvent).toEqual(event);
+});
+
+test("Event satisfies no filter groups and is dropped", () => {
+  const event = createEvent({
+    event: "test event",
+    properties: {
+      $host: "localhost:8000",
+      foo: 5,
+      bar: false,
+    },
+  });
+  const processedEvent = processEvent(event, meta_or);
+  expect(processedEvent).toBeUndefined();
 });

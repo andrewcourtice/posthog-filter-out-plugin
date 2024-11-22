@@ -1,30 +1,30 @@
 import { Meta, PluginEvent, PluginAttachment } from "@posthog/plugin-scaffold";
 
 export interface Filter {
-  property: string;
-  type: "string" | "number" | "boolean";
-  operator: string;
-  value: string | number | boolean;
+    property: string;
+    type: "string" | "number" | "boolean";
+    operator: string;
+    value: string | number | boolean;
 }
 
 export type PluginMeta = Meta<{
     config: {
-      eventsToDrop?: string;
-      keepUndefinedProperties?: "Yes" | "No";
+        eventsToDrop?: string;
+        keepUndefinedProperties?: "Yes" | "No";
     };
     global: {
-      filters: Filter[][];
-      eventsToDrop: string[];
-      keepUndefinedProperties?: boolean;
+        filters: Filter[][] | Filter[];
+        eventsToDrop: string[];
+        keepUndefinedProperties?: boolean;
     };
     attachments: {
-      filters?: PluginAttachment;
+        filters?: PluginAttachment;
     };
-  }>
+}>
 
 const operations: Record<
-  Filter["type"],
-  Record<string, (a: any, b: any) => boolean>
+    Filter["type"],
+    Record<string, (a: any, b: any) => boolean>
 > = {
     string: {
         is: (a, b) => a === b,
@@ -51,8 +51,7 @@ const operations: Record<
 export function setupPlugin({ global, config, attachments }: PluginMeta) {
     if (attachments.filters) {
         try {
-            // Parse the filters from the attachment
-            const filterGroups = JSON.parse(attachments.filters.contents) as Filter[][];
+            const filterGroups = parseFiltersAndMigrate(JSON.parse(attachments.filters.contents));
             if (!filterGroups) throw new Error("No filters found");
 
             // Check if the filters are valid
@@ -74,7 +73,7 @@ export function setupPlugin({ global, config, attachments }: PluginMeta) {
         global.filters = [];
     }
     global.eventsToDrop =
-    config?.eventsToDrop?.split(",")?.map((event) => event.trim()) || [];
+        config?.eventsToDrop?.split(",")?.map((event) => event.trim()) || [];
 
     global.keepUndefinedProperties = config.keepUndefinedProperties === "Yes";
 }
@@ -84,7 +83,8 @@ export function processEvent(
     meta: PluginMeta
 ): PluginEvent {
     if (!event.properties) return event;
-    const { filters, eventsToDrop, keepUndefinedProperties } = meta.global;
+    const { eventsToDrop, keepUndefinedProperties } = meta.global;
+    const filters = parseFiltersAndMigrate(meta.global.filters);
 
     // If the event name matches, we drop the event
     if (eventsToDrop.some((e) => event.event === e)) {
@@ -92,8 +92,8 @@ export function processEvent(
     }
 
     // Check if the event satisfies any of the filter groups (OR logic between groups)
-    const keepEvent = filters.some((filterGroup) => 
-    // Check if all filters in the group are satisfied (AND logic within group)
+    const keepEvent = filters.some((filterGroup) =>
+        // Check if all filters in the group are satisfied (AND logic within group)
         filterGroup.every((filter) => {
             const value = event.properties[filter.property];
             if (value === undefined) return keepUndefinedProperties;
@@ -108,3 +108,16 @@ export function processEvent(
     // If should keep the event, return it, else return undefined
     return keepEvent ? event : undefined;
 }
+
+const parseFiltersAndMigrate = (filters: Filter[][] | Filter[]): Filter[][] => {
+    if (!Array.isArray(filters)) {
+        throw new Error("No filters found");
+    }
+
+    // Handle legacy format: Convert single filter array to nested array
+    // to maintain backwards compatibility with older plugin versions that used a single array of filters with "AND" logic
+    if (filters.length === 0 || !Array.isArray(filters[0])) {
+        return [filters as Filter[]];
+    }
+    return filters as Filter[][];
+};

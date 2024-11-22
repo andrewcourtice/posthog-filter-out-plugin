@@ -2,8 +2,7 @@ import { expect, test, describe } from "@jest/globals";
 import { createEvent } from "@posthog/plugin-scaffold/test/utils";
 import { Filter, PluginMeta, processEvent, setupPlugin } from "./main";
 
-const filters: Filter[][] = [
-    [
+const filters: Filter[] = [
         {
             property: "$host",
             type: "string",
@@ -22,7 +21,6 @@ const filters: Filter[][] = [
             operator: "is",
             value: true,
         },
-    ],
 ];
 
 const meta = {

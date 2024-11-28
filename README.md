@@ -10,9 +10,9 @@ This plugin configuration requires a JSON file containing an array of filter gro
 
 **1. Single Filter Group:**  
 To keep events where all the following conditions are met:
-- **Email** does _not contain_ **yourcompany.com**
-- **Host** is _not_ **localhost:8000**
-- **Browser version** is _greater than_ **100**
+- **Email** _does not contain_ **yourcompany.com**
+- **Host** _is not_ **localhost:8000**
+- **Browser version** _is greater than_ **100**
 
 ```json
 [

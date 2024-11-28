@@ -5,24 +5,24 @@ import { PluginEvent } from "@posthog/plugin-scaffold";
 import { Filter, PluginMeta, processEvent, setupPlugin } from "./main";
 
 const filters: Filter[] = [
-        {
-            property: "$host",
-            type: "string",
-            operator: "not_contains",
-            value: "localhost",
-        },
-        {
-            property: "foo",
-            type: "number",
-            operator: "gt",
-            value: 10,
-        },
-        {
-            property: "bar",
-            type: "boolean",
-            operator: "is",
-            value: true,
-        },
+    {
+        property: "$host",
+        type: "string",
+        operator: "not_contains",
+        value: "localhost",
+    },
+    {
+        property: "foo",
+        type: "number",
+        operator: "gt",
+        value: 10,
+    },
+    {
+        property: "bar",
+        type: "boolean",
+        operator: "is",
+        value: true,
+    },
 ];
 
 const meta = {

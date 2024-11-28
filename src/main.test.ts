@@ -1,5 +1,7 @@
 import { expect, test, describe } from "@jest/globals";
-import { createEvent } from "@posthog/plugin-scaffold/test/utils";
+import { createEvent } from "@posthog/plugin-scaffold/dist/test/utils";
+import { PluginEvent } from "@posthog/plugin-scaffold";
+
 import { Filter, PluginMeta, processEvent, setupPlugin } from "./main";
 
 const filters: Filter[] = [
@@ -35,7 +37,7 @@ test("Event satisfies all conditions and passes", () => {
             foo: 20,
             bar: true,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
     expect(processedEvent).toEqual(event);
 });
@@ -48,7 +50,7 @@ test("Event does not satisfy one condition and is dropped", () => {
             foo: 20,
             bar: true,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
     expect(processedEvent).toBeUndefined();
 });
@@ -61,7 +63,7 @@ test("Event does not satisfy any condition and is dropped", () => {
             foo: 5,
             bar: false,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
     expect(processedEvent).toBeUndefined();
 });
@@ -74,7 +76,7 @@ test("Event is marked to be dropped is dropped", () => {
             foo: 20,
             bar: true,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
     expect(processedEvent).toBeUndefined();
 });
@@ -87,7 +89,7 @@ test("Event is marked to be dropped when a property is undefined", () => {
             foo: 20,
             bar: true,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
     expect(processedEvent).toBeUndefined();
 });
@@ -100,7 +102,7 @@ test("Event is marked to be dropped when a property is undefined but keepUndefin
             foo: 20,
             bar: true,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, {
         global: { ...meta.global, keepUndefinedProperties: true },
     } as PluginMeta);
@@ -154,7 +156,7 @@ describe("empty filters", () => {
                 foo: 20,
                 bar: true,
             },
-        });
+        }) as unknown as PluginEvent;
         const processedEvent = processEvent(event, meta_no_filters);
         expect(processedEvent).toEqual(event);
     });
@@ -167,7 +169,7 @@ describe("empty filters", () => {
                 foo: 20,
                 bar: true,
             },
-        });
+        }) as unknown as PluginEvent;
         const processedEvent = processEvent(event, meta_no_filters);
         expect(processedEvent).toBeUndefined();
     });
@@ -231,7 +233,7 @@ test("Event satisfies at least one filter group and passes", () => {
             foo: 5,
             bar: true,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta_or);
     expect(processedEvent).toEqual(event);
 });
@@ -244,7 +246,7 @@ test("Event satisfies no filter groups and is dropped", () => {
             foo: 5,
             bar: false,
         },
-    });
+    }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta_or);
     expect(processedEvent).toBeUndefined();
 });

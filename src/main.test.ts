@@ -23,6 +23,12 @@ const filters: Filter[] = [
         operator: "is",
         value: true,
     },
+    {
+        property: "$groups.foo",
+        type: "string",
+        operator: "is",
+        value: "bar",
+    },
 ];
 
 const meta = {
@@ -36,6 +42,9 @@ test("Event satisfies all conditions and passes", () => {
             $host: "example.com",
             foo: 20,
             bar: true,
+            $groups: {
+                foo: "bar"
+            }
         },
     }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
@@ -49,6 +58,9 @@ test("Event does not satisfy one condition and is dropped", () => {
             $host: "localhost:8000",
             foo: 20,
             bar: true,
+            $groups: {
+                foo: "bar"
+            }
         },
     }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
@@ -62,6 +74,9 @@ test("Event does not satisfy any condition and is dropped", () => {
             $host: "localhost:8000",
             foo: 5,
             bar: false,
+            $groups: {
+                foo: "foo"
+            }
         },
     }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
@@ -75,6 +90,9 @@ test("Event is marked to be dropped is dropped", () => {
             $host: "example.com",
             foo: 20,
             bar: true,
+            $groups: {
+                foo: "bar"
+            }
         },
     }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
@@ -88,6 +106,9 @@ test("Event is marked to be dropped when a property is undefined", () => {
             $host: undefined,
             foo: 20,
             bar: true,
+            $groups: {
+                foo: "bar"
+            }
         },
     }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, meta);
@@ -101,6 +122,9 @@ test("Event is marked to be dropped when a property is undefined but keepUndefin
             $host: undefined,
             foo: 20,
             bar: true,
+            $groups: {
+                foo: "bar"
+            }
         },
     }) as unknown as PluginEvent;
     const processedEvent = processEvent(event, {
@@ -155,6 +179,9 @@ describe("empty filters", () => {
                 $host: "example.com",
                 foo: 20,
                 bar: true,
+                $groups: {
+                    foo: "bar"
+                }
             },
         }) as unknown as PluginEvent;
         const processedEvent = processEvent(event, meta_no_filters);
@@ -168,6 +195,9 @@ describe("empty filters", () => {
                 $host: "example.com",
                 foo: 20,
                 bar: true,
+                $groups: {
+                    foo: "bar"
+                }
             },
         }) as unknown as PluginEvent;
         const processedEvent = processEvent(event, meta_no_filters);

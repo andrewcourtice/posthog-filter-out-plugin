@@ -78,6 +78,11 @@ export function setupPlugin({ global, config, attachments }: PluginMeta) {
     global.keepUndefinedProperties = config.keepUndefinedProperties === "Yes";
 }
 
+function createPropertyGetter(property: string) {
+    const keys = property.split('.');
+    return (event: PluginEvent) => keys.reduce((val, key) => val[key], event)
+}
+
 export function processEvent(
     event: PluginEvent,
     meta: PluginMeta
@@ -95,7 +100,8 @@ export function processEvent(
     const keepEvent = filters.some((filterGroup) =>
         // Check if all filters in the group are satisfied (AND logic within group)
         filterGroup.every((filter) => {
-            const value = event.properties[filter.property];
+            const keys = filter.property.split('.');
+            const value = keys.reduce((val, key) => val[key], event.properties);
             if (value === undefined) return keepUndefinedProperties;
 
             const operation = operations[filter.type][filter.operator];

@@ -78,11 +78,6 @@ export function setupPlugin({ global, config, attachments }: PluginMeta) {
     global.keepUndefinedProperties = config.keepUndefinedProperties === "Yes";
 }
 
-function createPropertyGetter(property: string) {
-    const keys = property.split('.');
-    return (event: PluginEvent) => keys.reduce((val, key) => val[key], event)
-}
-
 export function processEvent(
     event: PluginEvent,
     meta: PluginMeta
